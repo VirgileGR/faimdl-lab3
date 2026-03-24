@@ -94,3 +94,10 @@ for epoch in range(1, num_epochs + 1):
     train(epoch, model, train_loader, criterion, optimizer)
     # On teste à CHAQUE epoch pour avoir de beaux graphiques
     test_accuracy = test(epoch, model, test_loader, criterion) 
+
+torch.save(model.state_dict(), "model.pth")
+print("✅ Modèle sauvegardé avec succès sous 'model.pth' !")
+
+# Optionnel : Envoyer le fichier sur WandB pour l'avoir en ligne
+wandb.save("model.pth") 
+wandb.finish() # Pour dire à WandB que c'est fini proprement
