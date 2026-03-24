@@ -3,6 +3,17 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from models.customnet import CustomNet
+import wandb
+
+wandb.init(
+    project="faimdl-lab3",
+    config={
+        "learning_rate": 0.001,
+        "epochs": 10,
+        "batch_size": 64,
+        "architecture": "CustomNet"
+    }
+)
 
 
 # Define transforms
@@ -13,8 +24,8 @@ transform = transforms.Compose([
 ])
 
 # Load TinyImageNet
-train_dataset = datasets.ImageFolder('/dataset/tiny-imagenet-200/train', transform=transform)
-test_dataset = datasets.ImageFolder('/dataset/tiny-imagenet-200/val', transform=transform)
+train_dataset = datasets.ImageFolder('./data/tiny-imagenet-200/train', transform=transform)
+test_dataset = datasets.ImageFolder('./data/tiny-imagenet-200/val', transform=transform)
 
 train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
@@ -52,7 +63,8 @@ def train(epoch, model, train_loader, criterion, optimizer):
     print(f'Train Epoch: {epoch} Loss: {train_loss:.6f} Acc: {train_accuracy:.2f}%')
 
 # Test loop
-def test(model, test_loader, criterion):
+# Modifie la définition de test pour accepter l'epoch
+def test(epoch, model, test_loader, criterion): # Ajout de epoch ici
     model.eval()
     test_loss = 0
     correct = 0
@@ -71,10 +83,14 @@ def test(model, test_loader, criterion):
     test_loss = test_loss / len(test_loader)
     test_accuracy = 100. * correct / total
     print(f'Test Loss: {test_loss:.6f} Acc: {test_accuracy:.2f}%')
+    
+    # Correction des noms de variables ici
+    wandb.log({"epoch": epoch, "test/accuracy": test_accuracy, "test/loss": test_loss})
     return test_accuracy
 
-# Run the training and testing
+# --- LA BOUCLE DE RUN CORRIGÉE ---
 num_epochs = 10
 for epoch in range(1, num_epochs + 1):
     train(epoch, model, train_loader, criterion, optimizer)
-test_accuracy = test(model, test_loader, criterion)
+    # On teste à CHAQUE epoch pour avoir de beaux graphiques
+    test_accuracy = test(epoch, model, test_loader, criterion) 
